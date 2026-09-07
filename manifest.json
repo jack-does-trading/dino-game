@@ -1,0 +1,9 @@
+{
+  "manifest_version": 3,
+  "name": "Dino 3D",
+  "version": "1.0.0",
+  "description": "Chrome's offline dino page, except it turns into a 3D runner.",
+  "icons": { "192": "icons/icon-192.png", "512": "icons/icon-512.png" },
+  "background": { "service_worker": "ext/background.js" },
+  "permissions": ["webNavigation"]
+}

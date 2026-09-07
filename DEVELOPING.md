@@ -73,6 +73,24 @@ Each of these guards a failure that is invisible while developing:
 | `precache` | a new module missing from `sw.js`, which breaks the game *only* for people already offline |
 | `controls` | left/right mirrored by the camera basis, and a run restarting itself on input banked from the previous one — both have happened |
 
+## The extension
+
+`manifest.json` + `ext/background.js` turn the repo itself into an unpacked
+extension — the game files it loads are the same ones the website serves, not a
+copy, so there is nothing to keep in sync.
+
+Two constraints this puts on `index.html`, both easy to break by accident:
+
+- **No inline `<script>`.** Extension pages run under MV3's `script-src 'self'`,
+  which blocks them outright. That is why the boot and error-handling code lives
+  in `src/boot.js` rather than in the page. The same file has to work from
+  `https:`, from `file://` and from `chrome-extension://`.
+- **No service worker registration** from an extension page — Chrome disallows
+  it. `src/boot.js` skips it on the `chrome-extension:` protocol.
+
+Reload the extension at `chrome://extensions` after changing either file;
+`background.js` is a service worker and will otherwise keep running the old one.
+
 ## The intro is checked, not eyeballed
 
 The first screen is not a lookalike of Chrome's offline page — it is built from

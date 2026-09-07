@@ -29,6 +29,27 @@ To keep it one tap away:
 Installed, it opens from your home screen or dock like any other app, with no
 browser bars in the way.
 
+## Actually replacing Chrome's offline page
+
+Installing gets you the game as an app. It does **not** put it behind Chrome's
+own "No internet" screen — that page is `chrome://network-error`, built by the
+browser itself rather than served from the web, and no website can claim it no
+matter what it installs.
+
+Only an extension can, and this repo is one. It watches for a failed navigation
+and sends the tab to the game instead, with the address you were trying to reach
+carried along so **Reload** still retries the real page.
+
+Chrome does not let extensions install from a link, so this part is manual:
+
+1. Download this repo (green **Code** button → *Download ZIP*) and unzip it.
+2. Open `chrome://extensions` and turn on **Developer mode**, top right.
+3. Click **Load unpacked** and choose the unzipped folder.
+
+Now lose your connection and the dino is already 3D. The extension asks for one
+permission, `webNavigation` — enough to know that a page failed to load, and
+deliberately not enough to read any page you visit.
+
 ## Controls
 
 | | |

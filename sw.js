@@ -8,7 +8,7 @@
 // BUMP `VERSION` WHEN YOU DEPLOY. There is no build step to hash filenames for
 // us, so this constant is the only thing that tells an installed copy that it is
 // stale. tests/precache.test.mjs keeps PRECACHE itself honest.
-const VERSION = 'v3';
+const VERSION = 'v4';
 const CACHE = `dino3d-${VERSION}`;
 
 const PRECACHE = [
@@ -21,6 +21,7 @@ const PRECACHE = [
     './icons/icon-maskable-512.png',
     './src/audio.js',
     './src/input.js',
+    './src/boot.js',
     './src/main.js',
     './src/replay.js',
     './src/rng.js',

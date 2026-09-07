@@ -398,32 +398,7 @@
     <div id="installhint" hidden></div>
   </div>
 
-  <script>
-    (function () {
-      let shown = false;
-      function fail(what, detail) {
-        if (shown) return; shown = true;
-        var o = document.getElementById('overlay');
-        o.classList.remove('hidden');
-        document.getElementById('title').textContent = 'ERROR';
-        document.getElementById('sub').innerHTML =
-          '<div style="max-width:70ch;text-align:left;white-space:pre-wrap;font-size:12px">'
-          + what + '\n' + detail + '</div>';
-      }
-      addEventListener('error', e => fail(e.message, (e.error && e.error.stack) || (e.filename + ':' + e.lineno)));
-      addEventListener('unhandledrejection', e => fail('Unhandled rejection',
-        (e.reason && (e.reason.stack || e.reason.message)) || String(e.reason)));
-    })();
-  </script>
+  <script src="./src/boot.js"></script>
   <script type="module" src="./src/main.js"></script>
-  <script>
-    // An offline page that needs a connection to load is only half the joke.
-    // Registered after load so it never competes with the first frame, and
-    // guarded because service workers need a secure context -- opening the file
-    // straight off disk should still play.
-    if ('serviceWorker' in navigator) {
-      addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
-    }
-  </script>
 </body>
 </html>

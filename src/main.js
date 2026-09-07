@@ -364,7 +364,22 @@ window.__dino = {
 };
 
 addEventListener('resize', () => { view.resize(); if (state === 'offline') frameDino(); });
-document.getElementById('reload').addEventListener('click', () => location.reload());
+// The extension sends you here with the address you were actually trying to
+// reach, so Reload retries THAT -- replacing Chrome's error page should not cost
+// you the one useful thing it did. Anyone can put anything in a hash, so the
+// value is parsed and restricted to http(s): without this, a crafted link could
+// point Reload at `javascript:` and run whatever it liked on this origin.
+const retryTarget = (() => {
+    const raw = new URLSearchParams(location.hash.replace(/^#/, '')).get('retry');
+    if (!raw) return null;
+    try {
+        const u = new URL(raw);
+        return (u.protocol === 'http:' || u.protocol === 'https:') ? u.href : null;
+    } catch { return null; }
+})();
+document.getElementById('reload').addEventListener('click', () => {
+    if (retryTarget) location.href = retryTarget; else location.reload();
+});
 // Losing the tab mid-run should cost you nothing: come back to a paused game.
 addEventListener('visibilitychange', () => {
     last = performance.now();
