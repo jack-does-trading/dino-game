@@ -1,0 +1,23 @@
+<!doctype html><meta charset="utf-8"><title>measure</title>
+<style>html,body{margin:0;height:100%;overflow:hidden}iframe{border:0;width:100vw;height:100vh;display:block;position:fixed;inset:0;visibility:hidden}
+#out{position:fixed;inset:0;z-index:9;font:11px monospace;white-space:pre;background:#fff;color:#000}</style>
+<iframe id="f"></iframe><pre id="out">…</pre>
+<script>
+  const q = new URLSearchParams(location.search);
+  const f = document.getElementById('f');
+  f.src = '../' + q.get('u') + '?v=' + Date.now();
+  const SELS = (q.get('s') || '').split('|');
+  f.addEventListener('load', () => setTimeout(() => {
+    const d = f.contentDocument, w = f.contentWindow;
+    const rows = SELS.map(sel => {
+      const e = d.querySelector(sel);
+      if (!e) return sel.padEnd(18) + ' MISSING';
+      const r = e.getBoundingClientRect(), c = w.getComputedStyle(e);
+      return sel.padEnd(18) +
+        ` x=${r.x.toFixed(1)} y=${r.y.toFixed(1)} w=${r.width.toFixed(1)} h=${r.height.toFixed(1)}` +
+        ` fs=${c.fontSize} lh=${c.lineHeight} col=${c.color} mb=${c.marginBottom} mt=${c.marginTop} disp=${c.display} va=${c.verticalAlign}`;
+    });
+    rows.unshift(`viewport ${w.innerWidth}x${w.innerHeight} bodyBg=${w.getComputedStyle(d.body).backgroundColor} bodyFs=${w.getComputedStyle(d.body).fontSize}`);
+    document.getElementById('out').textContent = rows.join('\n');
+  }, 300));
+</script>

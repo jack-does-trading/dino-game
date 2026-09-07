@@ -1,0 +1,50 @@
+<!doctype html>
+<!-- Ground truth: Chromium's real neterror page, assembled from the upstream
+     stylesheets and sprite sheet so it can be screenshotted side by side with
+     our recreation. chrome://network-error/ itself cannot be captured. -->
+<html dir="ltr" lang="en" class="offline">
+<head>
+  <meta charset="utf-8">
+  <meta name="color-scheme" content="light dark">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>this-host-does-not-exist</title>
+  <link rel="stylesheet" href="interstitial_core.css">
+  <link rel="stylesheet" href="interstitial_common.css">
+  <link rel="stylesheet" href="neterror.css">
+</head>
+<body class="neterror" style="font-family: system-ui, sans-serif; font-size: 75%">
+<div id="main-frame-error" class="interstitial-wrapper">
+  <div id="main-content">
+    <div class="icon icon-offline"></div>
+    <div id="main-message">
+      <h1><span>No internet</span></h1>
+      <p></p>
+      <div id="suggestions-list">
+        <p>Try:</p>
+        <ul>
+          <li>Checking the network cables, modem, and router</li>
+          <li>Reconnecting to Wi-Fi</li>
+          <li>Running Network Diagnostics</li>
+        </ul>
+      </div>
+      <div class="error-code">ERR_INTERNET_DISCONNECTED</div>
+    </div>
+  </div>
+  <div id="buttons" class="nav-wrapper suggested-left">
+    <div id="control-buttons"><button id="reload-button" class="blue-button text-button">Reload</button></div>
+  </div>
+  <div class="runner-container"><canvas class="runner-canvas" width="44" height="150"></canvas></div>
+</div>
+<script>
+  // Exactly what Runner does: blit the standing T-rex out of the 1x sheet.
+  const img = new Image();
+  img.onload = () => {
+    const c = document.querySelector('.runner-canvas').getContext('2d');
+    // LDPI sprite definition: TREX at (848, 2); Trex.config 44x47.
+    // groundYPos = HEIGHT(150) - 47 - BOTTOM_PAD(10) = 93.
+    c.drawImage(img, 848, 2, 44, 47, 0, 93, 44, 47);
+  };
+  img.src = '100-offline-sprite.png';
+</script>
+</body>
+</html>

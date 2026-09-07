@@ -1,0 +1,15 @@
+{
+  "name": "dino3d",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "vendor": "node tools/vendor-ogl.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "serve": "python3 tools/serve.py 8000"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "ogl": "^1.0.11"
+  }
+}
