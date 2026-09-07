@@ -310,6 +310,21 @@
   @keyframes pulse { 50% { opacity: .3; } }
   #sub b { color: #ffe08a; font-weight: 700; }
   @media (prefers-reduced-motion: reduce) { .go { animation: none; } }
+
+  /* Offered on the death screen, never on the error page: the intro is a
+     pixel-for-pixel copy of Chrome's and an install button would give that away.
+     Right after your first run is when you want it anyway. */
+  #install {
+    justify-self: center; margin-top: 4px; padding: 9px 20px;
+    font: 600 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: .06em; color: var(--ink); background: transparent;
+    border: 1px solid currentColor; border-radius: 20px; cursor: pointer;
+    opacity: .75; transition: opacity .2s ease;
+  }
+  #install:hover { opacity: 1; }
+  #installhint {
+    margin-top: 6px; opacity: .5; font-size: 12px; letter-spacing: .04em;
+  }
 </style>
 </head>
 <body class="neterror">
@@ -350,6 +365,8 @@
   <div id="overlay" class="hidden">
     <div id="title"></div>
     <div id="sub"></div>
+    <button id="install" hidden>install it</button>
+    <div id="installhint" hidden></div>
   </div>
 
   <script>

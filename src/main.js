@@ -161,6 +161,53 @@ function updateSeedLine() {
     };
 }
 
+// --- install -----------------------------------------------------------------
+// The point of a PWA here is that it survives losing your connection, so make
+// keeping it a single click. Offered only on the death screen: the error page is
+// a pixel-for-pixel copy of Chrome's, and a button on it would give the game
+// away before you have played.
+const installBtn = document.getElementById('install');
+const installHint = document.getElementById('installhint');
+let installPrompt = null;
+
+const isInstalled = () => matchMedia('(display-mode: standalone)').matches
+    || navigator.standalone === true;
+
+addEventListener('beforeinstallprompt', (e) => {
+    // Suppressing the default also keeps Chrome's own install bar from popping
+    // up over the intro, which would spoil it just as effectively.
+    e.preventDefault();
+    installPrompt = e;
+    if (!isInstalled()) installBtn.hidden = false;
+});
+
+addEventListener('appinstalled', () => {
+    installPrompt = null;
+    installBtn.hidden = installHint.hidden = true;
+});
+
+installBtn.addEventListener('click', async () => {
+    if (!installPrompt) return;
+    installBtn.hidden = true;
+    installPrompt.prompt();
+    await installPrompt.userChoice;
+    installPrompt = null;   // the event is single use either way
+});
+
+// Any key retries, and on touch that includes tapping. Without this, tapping
+// install would also restart the run out from under the prompt.
+for (const el of [installBtn, installHint]) {
+    el.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
+}
+
+// Safari never fires beforeinstallprompt, so iOS gets told the manual route.
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+if (isIOS && !isInstalled()) {
+    installHint.textContent = 'keep it: share \u2192 add to home screen';
+    installHint.hidden = false;
+}
+
 // --- loop --------------------------------------------------------------------
 let last = performance.now();
 let acc = 0;
