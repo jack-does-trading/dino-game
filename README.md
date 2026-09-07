@@ -21,9 +21,9 @@ is, after all, the entire point.
 
 To keep it one tap away:
 
-- **Chrome / Edge (computer)** — press **install it** on the game-over screen, or
+- **Chrome / Edge (computer)** — press **add to browser** on the game-over screen, or
   click the install icon at the right-hand end of the address bar.
-- **Android** — same **install it** button, or menu → *Add to Home screen*.
+- **Android** — same **add to browser** button, or menu → *Add to Home screen*.
 - **iPhone / iPad** — tap **Share**, then **Add to Home Screen**.
 
 Installed, it opens from your home screen or dock like any other app, with no

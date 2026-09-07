@@ -314,7 +314,10 @@
   /* Buttons are addressed by id, not a shared class: `.neterror button` above
      paints every button blue and floats it right, and only an id outranks it. */
   #install, #resume, #restart, #pausebtn {
-    justify-self: center; padding: 9px 20px; float: none;
+    /* width: auto undoes Chrome's `@media (max-width: 420px) { button { width:
+       100% } }` above, which is right for its Reload button and very wrong for
+       a corner pause button. #reload is deliberately left to inherit it. */
+    justify-self: center; padding: 9px 20px; float: none; width: auto;
     font: 600 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     letter-spacing: .06em; color: var(--ink); background: transparent;
     border: 1px solid currentColor; border-radius: 20px; cursor: pointer;
@@ -391,7 +394,7 @@
       <button id="resume" hidden>resume</button>
       <button id="restart" hidden>restart</button>
     </div>
-    <button id="install" hidden>install it</button>
+    <button id="install" hidden>add to browser</button>
     <div id="installhint" hidden></div>
   </div>
 
