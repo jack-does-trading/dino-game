@@ -42,6 +42,40 @@ Truncate the code and it still yields the right track, just without the ghost.
 Your best run is kept in `localStorage`, and you race it whenever the seed
 matches.
 
+## Installing it, and actually playing offline
+
+An offline page that needs a connection to load is only half the joke, so the
+whole app is precached by a service worker on first visit. After you have opened
+it once it runs with the network completely gone -- verified by killing the
+server and reloading, not just by reading the code.
+
+Chrome and Edge offer an install button in the address bar; on iOS it is Share →
+Add to Home Screen. Installed, it launches standalone from the home screen or
+dock with no browser chrome, which is the most convincing version of the gag.
+
+Two things worth knowing if you change the code:
+
+- **Bump `VERSION` in `sw.js` when you deploy.** There is no build step hashing
+  filenames, so that constant is the only signal an installed copy has that it
+  is stale. Forget it and returning players keep the old build.
+- **Add new files to `PRECACHE` in `sw.js`.** `tests/precache.test.mjs` fails if
+  you don't. That failure mode is nasty otherwise: the game keeps working for
+  you, because you are online, and silently stops working offline for everyone
+  who already installed it.
+
+During development the worker will happily serve you a stale copy of your own
+edits. DevTools → Application → Service Workers → "Bypass for network", or clear
+it from the console:
+
+    for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister();
+    for (const k of await caches.keys()) await caches.delete(k);
+
+The icons are not drawn by hand -- they are the dino's side-on silhouette,
+rasterized from the same box list `src/render/meshes.js` builds the model from,
+so they cannot drift from the game:
+
+    python3 tools/make-icons.py
+
 ## How it holds together
 
 The two things that could break are handled separately, because they need
@@ -82,14 +116,17 @@ width, by the classic scrollbar the reference loses when its document scrolls �
 
 ## Layout
 
-    index.html          shell + Chrome's error page, inline CSS
-    vendor/ogl.min.js   committed WebGL bundle (ogl, 14 KB gzipped)
-    src/sim/            headless game logic — no imports out
-    src/render/         ogl setup, procedural geometry, shaders, biomes
-    src/audio.js        WebAudio synthesis, no files
-    src/replay.js       ghost recording, share codes
-    reference/          Chromium's page, for the layout diff
-    tools/              vendoring, dev server, layout diff
+    index.html            shell + Chrome's error page, inline CSS
+    sw.js                 service worker — precache, offline
+    manifest.webmanifest  PWA metadata
+    icons/                generated from the 3D model
+    vendor/ogl.min.js     committed WebGL bundle (ogl, 14 KB gzipped)
+    src/sim/              headless game logic — no imports out
+    src/render/           ogl setup, procedural geometry, shaders, biomes
+    src/audio.js          WebAudio synthesis, no files
+    src/replay.js         ghost recording, share codes, URL parsing
+    reference/            Chromium's page, for the layout diff
+    tools/                vendoring, dev server, layout diff, icons
 
 ## Regenerating the WebGL bundle
 

@@ -6,7 +6,7 @@ import { createInput } from './input.js';
 import { createAudio } from './audio.js';
 import {
     createRecorder, recordSample, finishRecording, createGhost,
-    encodeShare, decodeShare, loadBest, saveBest,
+    encodeShare, parseSession, loadBest, saveBest,
 } from './replay.js';
 
 const canvas = document.getElementById('gl');
@@ -35,20 +35,16 @@ const input = createInput(window);
 const audio = createAudio();
 
 // --- session -----------------------------------------------------------------
-const params = new URLSearchParams(location.hash.slice(1));
-const sharedRun = params.get('c') ? decodeShare(params.get('c')) : null;
-const seedParam = params.get('s');
 const randomSeed = () => (Math.random() * 0xffffffff) >>> 0;
+const session = parseSession(location.hash, randomSeed);
 
 let best = loadBest();
-let seed = sharedRun ? sharedRun.seed
-    : seedParam ? (parseInt(seedParam, 36) >>> 0) || randomSeed()
-    : randomSeed();
+let seed = session.seed;
 
 // A shared run's ghost takes priority; otherwise you race your own best, but only
 // on the same track -- racing a ghost from a different seed would be nonsense.
-let challengeGhost = sharedRun && sharedRun.ghost ? sharedRun.ghost : null;
-let challengeScore = sharedRun ? sharedRun.score : null;
+let challengeGhost = session.ghost;
+let challengeScore = session.score;
 
 // offline -> transition -> playing -> dead
 //
@@ -94,8 +90,9 @@ function start() {
     document.body.classList.add('playing');
 }
 
+// Reset to the error page. Deliberately does NOT pick a seed: `#s=` and `#c=`
+// have already decided it, and inventing one here silently threw those away.
 function intro() {
-    seed = randomSeed();
     sim = createSim(seed, true);   // centre lane only, like the original
     ghost = null;
     mix = 0;
@@ -274,14 +271,11 @@ addEventListener('keydown', (e) => { if (e.code === 'KeyM') audio.toggleMute(); 
 
 view.resize();
 intro();
-if (sharedRun) {
-    seed = sharedRun.seed;
-    sim = createSim(seed, true);
+if (session.shared) {
     const hint = document.createElement('div');
     hint.id = 'challenge';
-    hint.innerHTML = `press <b>space</b> to beat ${sharedRun.score} on this track`;
+    hint.innerHTML = `press <b>space</b> to beat ${session.score} on this track`;
     document.getElementById('err').after(hint);
-    updateSeedLine();
 }
 // The page needs a real layout pass before the dino can be framed against it.
 requestAnimationFrame(() => frameDino());

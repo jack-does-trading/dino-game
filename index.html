@@ -3,6 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#202124" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
 <title>Dino 3D</title>
 <style>
   /* ---------------------------------------------------------------------------
@@ -364,5 +370,14 @@
     })();
   </script>
   <script type="module" src="./src/main.js"></script>
+  <script>
+    // An offline page that needs a connection to load is only half the joke.
+    // Registered after load so it never competes with the first frame, and
+    // guarded because service workers need a secure context -- opening the file
+    // straight off disk should still play.
+    if ('serviceWorker' in navigator) {
+      addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+    }
+  </script>
 </body>
 </html>

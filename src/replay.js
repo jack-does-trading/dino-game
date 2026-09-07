@@ -120,3 +120,32 @@ export function saveBest(score, seed, ghost) {
         return true;
     } catch { return false; }
 }
+
+/**
+ * Resolve what a URL fragment asks us to play.
+ *
+ * `#c=<code>` is a full challenge: someone's track, score and ghost. `#s=<seed>`
+ * is just the track, base 36. Neither is trusted -- a mangled code has to
+ * degrade to a normal random run rather than throwing on boot.
+ *
+ * Kept here, next to the encoder, and pure so it can actually be tested: this
+ * silently regressed once when the boot path overwrote the parsed seed.
+ */
+export function parseSession(hash, randomSeed) {
+    const params = new URLSearchParams(String(hash || '').replace(/^#/, ''));
+    const code = params.get('c');
+    const shared = code ? decodeShare(code) : null;
+    if (shared) {
+        return { seed: shared.seed, ghost: shared.ghost || null, score: shared.score, shared: true };
+    }
+    const s = params.get('s');
+    // parseInt tolerates trailing junk and returns NaN on none; >>> 0 turns NaN
+    // into 0, which is a legal seed, so only fall back when nothing parsed.
+    const parsed = s === null ? NaN : parseInt(s, 36);
+    return {
+        seed: Number.isNaN(parsed) ? randomSeed() : parsed >>> 0,
+        ghost: null,
+        score: null,
+        shared: false,
+    };
+}
