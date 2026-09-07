@@ -311,17 +311,38 @@
   #sub b { color: #ffe08a; font-weight: 700; }
   @media (prefers-reduced-motion: reduce) { .go { animation: none; } }
 
-  /* Offered on the death screen, never on the error page: the intro is a
-     pixel-for-pixel copy of Chrome's and an install button would give that away.
-     Right after your first run is when you want it anyway. */
-  #install {
-    justify-self: center; margin-top: 4px; padding: 9px 20px;
+  /* Buttons are addressed by id, not a shared class: `.neterror button` above
+     paints every button blue and floats it right, and only an id outranks it. */
+  #install, #resume, #restart, #pausebtn {
+    justify-self: center; padding: 9px 20px; float: none;
     font: 600 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     letter-spacing: .06em; color: var(--ink); background: transparent;
     border: 1px solid currentColor; border-radius: 20px; cursor: pointer;
     opacity: .75; transition: opacity .2s ease;
   }
-  #install:hover { opacity: 1; }
+  #install:hover, #resume:hover, #restart:hover { opacity: 1; }
+  #install:active, #resume:active, #restart:active, #pausebtn:active {
+    background: rgba(128, 128, 128, .22);
+  }
+  /* Offered on the death and pause screens, never on the error page: the intro
+     is a pixel-for-pixel copy of Chrome's and an install button would give that
+     away. Once you have actually played is when you want it anyway. */
+  #install { margin-top: 4px; }
+  #actions { display: flex; gap: 10px; justify-content: center; }
+  #actions[hidden] { display: none; }   /* `hidden` alone loses to display:flex */
+  #restart { border-width: 2px; opacity: 1; }
+
+  /* Pause lives in the corner rather than on the overlay -- it has to be
+     reachable mid-run, and on touch there is no Esc key to reach for. Mirrors
+     the HUD's fade so it never shows over the error page. */
+  #pausebtn {
+    position: fixed; right: 16px; bottom: 12px; padding: 6px 14px; font-size: 11px;
+    opacity: 0; pointer-events: none;
+    transition: opacity .6s ease, color .6s ease;
+  }
+  body.playing #pausebtn { opacity: .5; pointer-events: auto; }
+  body.playing #pausebtn:hover { opacity: 1; }
+  body.paused #pausebtn { opacity: 0; pointer-events: none; }
   #installhint {
     margin-top: 6px; opacity: .5; font-size: 12px; letter-spacing: .04em;
   }
@@ -361,10 +382,15 @@
     <div id="mult"></div>
   </div>
   <div class="hud" id="seedline"><span id="seed"></span></div>
+  <button id="pausebtn">pause</button>
 
   <div id="overlay" class="hidden">
     <div id="title"></div>
     <div id="sub"></div>
+    <div id="actions" hidden>
+      <button id="resume" hidden>resume</button>
+      <button id="restart" hidden>restart</button>
+    </div>
     <button id="install" hidden>install it</button>
     <div id="installhint" hidden></div>
   </div>

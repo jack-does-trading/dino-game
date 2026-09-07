@@ -71,6 +71,7 @@ Each of these guards a failure that is invisible while developing:
 | `track-seed` | a seed that stops reproducing its track, which silently breaks every share code |
 | `session` | `#s=` / `#c=` being parsed and then ignored (this has happened) |
 | `precache` | a new module missing from `sw.js`, which breaks the game *only* for people already offline |
+| `controls` | left/right mirrored by the camera basis, and a run restarting itself on input banked from the previous one — both have happened |
 
 ## The intro is checked, not eyeballed
 

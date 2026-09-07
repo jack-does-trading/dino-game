@@ -21,6 +21,10 @@ const hud = {
     title: document.getElementById('title'),
     sub: document.getElementById('sub'),
     seed: document.getElementById('seed'),
+    actions: document.getElementById('actions'),
+    resume: document.getElementById('resume'),
+    restart: document.getElementById('restart'),
+    pause: document.getElementById('pausebtn'),
 };
 
 let view;
@@ -46,7 +50,7 @@ let seed = session.seed;
 let challengeGhost = session.ghost;
 let challengeScore = session.score;
 
-// offline -> transition -> playing -> dead
+// offline -> transition -> playing -> dead   (playing <-> paused)
 //
 // `offline` is the browser's error page: the dino standing still, side-on and
 // monochrome, with the HTML laid out around it. Pressing space starts it running
@@ -64,6 +68,9 @@ let ghost = null;
 const ghostPose = { x: 0, y: 0, ducking: false };
 let deadFor = 0;
 let lastCode = '';
+// Which state to hand back to on resume: pausing during the camera swing must
+// not drop you into the middle of it as though it had finished.
+let pausedFrom = 'playing';
 
 function ghostForSeed(s) {
     if (challengeGhost) return createGhost(challengeGhost);
@@ -87,7 +94,9 @@ function start() {
     transT = 0;
     deadFor = 0;
     hud.overlay.classList.add('hidden');
+    showActions({});
     document.body.classList.add('playing');
+    document.body.classList.remove('paused');
 }
 
 // Reset to the error page. Deliberately does NOT pick a seed: `#s=` and `#c=`
@@ -99,9 +108,10 @@ function intro() {
     transT = 0;
     view.reset();
     state = 'offline';
-    document.body.classList.remove('playing');
+    document.body.classList.remove('playing', 'paused');
     offline.classList.remove('gone');
     hud.overlay.classList.add('hidden');
+    showActions({});
     updateSeedLine();
 }
 
@@ -122,8 +132,13 @@ function frameDino() {
 
 function die() {
     state = 'dead';
-    document.body.classList.remove('playing');
+    document.body.classList.remove('playing', 'paused');
     deadFor = 0;
+    // Drain the input queue. It is only ever consumed while dead or on the error
+    // page, never while you are playing -- so without this, every jump pressed
+    // during the run is still banked when it ends and the retry below fires the
+    // instant its gate opens: the run restarting on its own the moment it ended.
+    input.clear();
     view.shake(1.4);
     audio.die();
 
@@ -141,8 +156,40 @@ function die() {
     const beat = challengeScore != null
         ? (score > challengeScore ? `beat the challenge (${challengeScore})` : `challenge: ${challengeScore}`)
         : isBest ? 'new best' : `best ${best.score}`;
-    hud.sub.innerHTML = `${beat}<br><span class="go">press any key to retry</span>`;
+    hud.sub.innerHTML = `${beat}<br><span class="go">press <b>space</b> to run again</span>`;
+    showActions({ restart: true });
     updateSeedLine();
+}
+
+// --- pause -------------------------------------------------------------------
+function showActions({ resume = false, restart = false }) {
+    hud.resume.hidden = !resume;
+    hud.restart.hidden = !restart;
+    hud.actions.hidden = !(resume || restart);
+}
+
+function pause() {
+    if (state !== 'playing' && state !== 'transition') return;
+    pausedFrom = state;
+    state = 'paused';
+    document.body.classList.add('paused');
+    hud.title.textContent = 'paused';
+    hud.sub.innerHTML = '<span class="go">press <b>esc</b> to resume</span>';
+    showActions({ resume: true, restart: true });
+    hud.overlay.classList.remove('hidden');
+}
+
+function unpause() {
+    if (state !== 'paused') return;
+    state = pausedFrom;
+    document.body.classList.remove('paused');
+    hud.overlay.classList.add('hidden');
+    showActions({});
+    // A tap on `resume` also lands as a jump on the way through, and the clock
+    // has kept running -- drop both rather than spending them on the first tick.
+    input.clear();
+    last = performance.now();
+    acc = 0;
 }
 
 function updateSeedLine() {
@@ -232,7 +279,7 @@ function frame(now) {
     while (acc >= DT && steps < 5) {
         acc -= DT;
         steps++;
-        if (state === 'dead' || state === 'offline') break;   // the dino stands still
+        if (state === 'dead' || state === 'offline' || state === 'paused') break;   // the dino stands still
 
         const inp = state === 'offline' ? botInput(sim) : input.take();
         stepSim(sim, inp);
@@ -265,9 +312,12 @@ function frame(now) {
         mix = state === 'offline' ? 0 : 1;
     }
 
-    if (state === 'dead') {
+    if (state === 'paused') {
+        acc = 0;   // otherwise a long pause banks steps and fast-forwards on resume
+    } else if (state === 'dead') {
         deadFor += dt;
-        if (deadFor > 0.35 && input.takeAny()) start();
+        // Long enough to read the score, and to see the crash land.
+        if (deadFor > 0.6 && input.takeConfirm()) start();
     } else if (state === 'offline') {
         frameDino();
         if (input.takeAny()) start();
@@ -280,7 +330,9 @@ function frame(now) {
         pose = ghost.sample(ghostPose);
     }
 
-    view.render(sim, dt, now / 1000, pose, mix, state !== 'offline');
+    // dt 0 while paused freezes the camera smoothing, the run cycle and the
+    // shake in place, so the world holds its exact frame instead of drifting.
+    view.render(sim, state === 'paused' ? 0 : dt, now / 1000, pose, mix, state !== 'offline');
     audio.update(sim, view.biome.name);
     drawHud();
 
@@ -313,8 +365,33 @@ window.__dino = {
 
 addEventListener('resize', () => { view.resize(); if (state === 'offline') frameDino(); });
 document.getElementById('reload').addEventListener('click', () => location.reload());
-addEventListener('visibilitychange', () => { last = performance.now(); acc = 0; });
-addEventListener('keydown', (e) => { if (e.code === 'KeyM') audio.toggleMute(); });
+// Losing the tab mid-run should cost you nothing: come back to a paused game.
+addEventListener('visibilitychange', () => {
+    last = performance.now();
+    acc = 0;
+    if (document.hidden) pause();
+});
+addEventListener('keydown', (e) => {
+    if (e.code === 'KeyM') audio.toggleMute();
+    if (e.code === 'Escape' || e.code === 'KeyP') {
+        e.preventDefault();
+        if (state === 'paused') unpause(); else pause();
+    }
+});
+
+hud.pause.addEventListener('click', pause);
+hud.resume.addEventListener('click', unpause);
+hud.restart.addEventListener('click', () => {
+    // From the pause screen this is a deliberate abandon, so it has to get past
+    // start()'s "already running" guard rather than resuming into it.
+    if (state === 'paused') state = 'dead';
+    start();
+});
+// A tap anywhere is the touch equivalent of space, so every button has to keep
+// its tap to itself or pressing it also restarts the run.
+for (const el of [hud.pause, hud.resume, hud.restart]) {
+    el.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
+}
 
 view.resize();
 intro();

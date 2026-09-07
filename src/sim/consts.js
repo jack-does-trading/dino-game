@@ -2,7 +2,11 @@
 
 export const LANES = 3;
 export const LANE_W = 2.0;              // world units between lane centres
-export const laneX = (i) => (i - 1) * LANE_W;
+// Lane 0 is the LEFT lane on screen, so x must count DOWN with the lane index.
+// The gameplay camera sits behind the dino looking down +z with +y up, and in a
+// right-handed frame that makes screen-right the -x direction -- counting up
+// here silently mirrors the world, so pressing right sends you left.
+export const laneX = (i) => (1 - i) * LANE_W;
 
 export const CHUNK_LEN = 24;            // world units per chunk
 export const SLOT_DZ = [4, 12, 20];     // obstacle slots within a chunk, 8 apart

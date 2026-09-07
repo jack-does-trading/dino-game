@@ -8,6 +8,7 @@ export function createInput(target = window) {
     const q = { left: 0, right: 0, jump: 0 };
     let duck = false;
     let anyPress = 0;
+    let confirmPress = 0;
 
     const press = (k) => { q[k]++; anyPress++; };
 
@@ -18,7 +19,18 @@ export function createInput(target = window) {
         ArrowDown: 'duck', KeyS: 'duck',
     };
 
+    // Meta keys must never count as "any key": pausing or muting should not also
+    // restart the run you just paused.
+    const IGNORED = new Set(['Escape', 'KeyP', 'KeyM']);
+
+    // Restarting is deliberate: space (or enter), not "any key". A run ends with
+    // your hands still on the controls, and every other key you might hit on the
+    // way to reading your score would otherwise throw you into the next run.
+    const CONFIRM = new Set(['Space', 'Enter', 'NumpadEnter']);
+
     function onKeyDown(e) {
+        if (IGNORED.has(e.code)) return;
+        if (CONFIRM.has(e.code)) confirmPress++;
         const a = KEYS[e.code];
         if (!a) { anyPress++; return; }
         e.preventDefault();
@@ -51,7 +63,7 @@ export function createInput(target = window) {
         e.preventDefault();
     }
     function onTouchEnd() {
-        if (!moved && performance.now() - tt < 250) press('jump');
+        if (!moved && performance.now() - tt < 250) { press('jump'); confirmPress++; }
         duck = false;
     }
 
@@ -75,6 +87,8 @@ export function createInput(target = window) {
         },
         /** Did anything at all get pressed since the last check? */
         takeAny() { const a = anyPress > 0; anyPress = 0; return a; },
-        clear() { q.left = q.right = q.jump = 0; anyPress = 0; },
+        /** Space, enter or a tap -- a deliberate "yes", used to restart. */
+        takeConfirm() { const a = confirmPress > 0; confirmPress = 0; return a; },
+        clear() { q.left = q.right = q.jump = 0; anyPress = confirmPress = 0; },
     };
 }

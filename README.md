@@ -36,13 +36,16 @@ browser bars in the way.
 | **space** or **↑** | jump |
 | **←** **→** | change lane |
 | **↓** | duck |
+| **esc** or **P** | pause |
 | **M** | mute |
-| any key | restart, the instant you crash |
 
-On a phone: swipe left and right to change lane, tap to jump, swipe down to duck.
+On a phone: swipe left and right to change lane, tap to jump, swipe down to duck,
+and tap to go again after a crash. There is a **pause** button in the corner.
 
-One hit and the run is over. There is no menu between dying and playing again,
-which is the best thing about the original and the thing most worth keeping.
+One hit and the run is over, and space puts you straight back on the track — there
+is no menu between dying and playing again, which is the best thing about the
+original and the thing most worth keeping. Switch tabs mid-run and the game pauses
+itself rather than letting the world run on without you.
 
 ## Race your friends
 
